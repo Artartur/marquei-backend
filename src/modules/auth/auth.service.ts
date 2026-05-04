@@ -1,14 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { Response, Request } from 'express';
 import { StringValue } from 'ms';
-import { UsersService } from '../users/users.service';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { ConfigService } from '@nestjs/config';
+import { UpdateMeDto } from './dto/update-me.dto';
 import { JwtPayload } from 'src/interfaces/jwtPayload';
-import { UserRole } from 'src/utils/enums/UserRole';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +29,7 @@ export class AuthService {
   }
 
   public async login(dto: LoginDto, res: Response) {
-    const user = await this.usersService.findUserByEmail(dto.email);
+    const user = await this.usersService.findUserByEmail(dto.email, true);
 
     const isValid = await bcrypt.compare(dto.password, user.password);
 
@@ -82,9 +82,9 @@ export class AuthService {
       if (!user) throw new UnauthorizedException('Usuário não encontrado');
 
       const newPayload: Omit<JwtPayload, 'exp' | 'iat'> = {
-        sub: user.id as string,
-        email: user.email as string,
-        role: user.role as UserRole,
+        sub: user.id,
+        email: user.email,
+        role: user.role,
       };
 
       const newAccessToken = this.jwtService.sign(newPayload);
@@ -105,5 +105,9 @@ export class AuthService {
 
   public async register(dto: CreateUserDto) {
     return this.usersService.createUser(dto);
+  }
+
+  public async updateMe(userId: string, dto: UpdateMeDto) {
+    return this.usersService.updateMe(userId, dto);
   }
 }
