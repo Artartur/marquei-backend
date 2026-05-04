@@ -7,10 +7,164 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AppointmentStatus {
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  SCHEDULED
+}
+
+enum DayOfWeek {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
+enum ImportStatus {
+  QUEUED
+  PROCESSING
+  DONE
+  DONE_WITH_ERRORS
+}
+
 enum Role {
   CLIENT
   MANAGER
   PROFESSIONAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum NotificationType {
+  CONFIRMATION
+  REMINDER_24H
+  CANCELLATION
+  RESCHEDULE
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  clientId       String
+  professionalId String
+  serviceId      String
+  status         AppointmentStatus @default(SCHEDULED)
+
+  scheduledAt DateTime
+  endsAt      DateTime
+
+  cancelledAt      DateTime?
+  cancelledBy      String?
+  cancellationNote String?   @db.VarChar(255)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client        User           @relation("ClientAppointments", fields: [clientId], references: [id])
+  professional  Professional   @relation(fields: [professionalId], references: [id])
+  service       Service        @relation(fields: [serviceId], references: [id])
+  notifications Notification[]
+
+  @@unique([professionalId, scheduledAt])
+  @@index([clientId])
+  @@index([professionalId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+model ImportJob {
+  id        String       @id @default(uuid())
+  managerId String
+  manager   User         @relation(fields: [managerId], references: [id])
+  status    ImportStatus @default(QUEUED)
+  fileName  String       @db.VarChar(255)
+  totalRows Int          @default(0)
+  processed Int          @default(0)
+  failed    Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  errors ImportError[]
+
+  @@index([managerId])
+  @@index([status])
+  @@map("importJobs")
+}
+
+model ImportError {
+  id          String    @id @default(uuid())
+  importJobId String
+  importJob   ImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  row         Int
+  reason      String    @db.VarChar(500)
+  rawData     Json
+
+  @@index([importJobId])
+  @@map("importErrors")
+}
+
+model Notification {
+  id            String             @id @default(uuid())
+  userId        String
+  appointmentId String
+  type          NotificationType
+  status        NotificationStatus @default(PENDING)
+  scheduledFor  DateTime
+  sentAt        DateTime?
+  createdAt     DateTime           @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@unique([userId, appointmentId, type])
+  @@index([status, scheduledFor])
+  @@map("notifications")
+}
+
+model Professional {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  workSchedules        WorkSchedule[]
+  professionalServices ProfessionalService[]
+  appointments         Appointment[]
+
+  @@index([userId])
+  @@map("professionals")
+}
+
+model ProfessionalService {
+  professionalId String
+  serviceId      String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service        Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+  @@map("professionalsServices")
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  name            String   @db.VarChar(100)
+  durationMinutes Int
+  price           Decimal  @db.Decimal(10, 2)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  professionalServices ProfessionalService[]
+  appointments         Appointment[]
+
+  @@map("services")
 }
 
 model User {
@@ -24,5 +178,24 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  professional  Professional?
+  appointments  Appointment[]  @relation("ClientAppointments")
+  notifications Notification[]
+  importJobs    ImportJob[]
+
   @@map("users")
+}
+
+model WorkSchedule {
+  id             String       @id @default(uuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  dayOfWeek DayOfWeek
+  startTime String    @db.VarChar(5)
+  endTime   String    @db.VarChar(5)
+
+  @@unique([professionalId, dayOfWeek])
+  @@index([professionalId])
+  @@map("workschedules")
 }

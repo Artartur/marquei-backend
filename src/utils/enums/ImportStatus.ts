@@ -1,0 +1,6 @@
+export enum ImportStatus {
+  DONE = 'DONE',
+  DONE_WITH_ERRORS = 'DONE_WITH_ERRORS',
+  PROCESSING = 'PROCESSING',
+  QUEUED = 'QUEUED',
+}

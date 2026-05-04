@@ -1,6 +1,8 @@
+import { ConfigService } from '@nestjs/config';
 import { defineConfig } from 'prisma/config';
-import { configService } from 'src/utils/configService';
+import 'dotenv/config';
 
+const configService = new ConfigService();
 const dbUrl = configService.get<string>('DATABASE_URL');
 
 export default defineConfig({
