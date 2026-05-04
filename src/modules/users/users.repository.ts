@@ -133,7 +133,7 @@ export class UsersRepository {
   }
 
   public async updateUser(id: string, dto: UpdateUserByManagerDto) {
-    await this.findById(id);
+    const user = await this.findById(id);
 
     const updatePayload = Object.fromEntries(
       Object.entries(dto).filter(([, v]) => v !== undefined),
@@ -148,6 +148,18 @@ export class UsersRepository {
       .single();
 
     if (error) throw new InternalServerErrorException(error.message);
+
+    if (dto.role && dto.role !== user.role) {
+      if (dto.role === UserRole.PROFESSIONAL) {
+        await this.db.getClient().from('professionals').insert({ userId: id });
+      } else if (user.role === UserRole.PROFESSIONAL) {
+        await this.db
+          .getClient()
+          .from('professionals')
+          .delete()
+          .eq('userId', id);
+      }
+    }
 
     return data;
   }
