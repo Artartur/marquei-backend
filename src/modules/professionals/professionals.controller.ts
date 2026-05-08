@@ -27,6 +27,11 @@ export class ProfessionalsController {
     return this.professionalsService.addSchedule(id, dto);
   }
 
+  @Get('')
+  public async findProfessionals() {
+    return this.professionalsService.findProfessionals();
+  }
+
   @Get(':id/schedule')
   @Roles(UserRole.MANAGER, UserRole.PROFESSIONAL)
   public async getSchedule(@Param('id', ParseUUIDPipe) id: string) {

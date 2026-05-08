@@ -5,29 +5,36 @@ import { LinkServiceDto } from './dto/link-service.dto';
 
 @Injectable()
 export class ProfessionalsService {
-  constructor(private professionalsService: ProfessionalsRepository) {}
+  constructor(private professionalsRepository: ProfessionalsRepository) {}
 
   public async addSchedule(professionalId: string, dto: SetScheduleDto) {
-    return this.professionalsService.addSchedule(professionalId, dto);
+    return this.professionalsRepository.addSchedule(professionalId, dto);
+  }
+
+  public async findProfessionals() {
+    return this.professionalsRepository.findProfessionals();
   }
 
   public async getSchedule(professionalId: string) {
-    return this.professionalsService.getSchedule(professionalId);
+    return this.professionalsRepository.getSchedule(professionalId);
   }
 
   public async replaceSchedule(professionalId: string, dto: SetScheduleDto) {
-    return this.professionalsService.replaceSchedule(professionalId, dto);
+    return this.professionalsRepository.replaceSchedule(professionalId, dto);
   }
 
   public async getProfessionalServices(professionalId: string) {
-    return this.professionalsService.getProfessionalServices(professionalId);
+    return this.professionalsRepository.getProfessionalServices(professionalId);
   }
 
   public async linkService(professionalId: string, dto: LinkServiceDto) {
-    return this.professionalsService.linkService(professionalId, dto);
+    return this.professionalsRepository.linkService(professionalId, dto);
   }
 
   public async unlinkService(professionalId: string, serviceId: string) {
-    return this.professionalsService.unlinkService(professionalId, serviceId);
+    return this.professionalsRepository.unlinkService(
+      professionalId,
+      serviceId,
+    );
   }
 }

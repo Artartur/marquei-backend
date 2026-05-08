@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
@@ -8,12 +9,14 @@ import { SetScheduleDto } from './dto/set-schedule.dto';
 import { WorkSchedules } from 'src/interfaces/workSchedules.interface';
 import { LinkServiceDto } from './dto/link-service.dto';
 import { ProfessionalService } from 'src/interfaces/professionalsServices.interface';
+import { User } from 'src/interfaces/user.interface';
+import { Professional } from 'src/interfaces/professional.interface';
 
 @Injectable()
 export class ProfessionalsRepository {
   constructor(private db: DatabaseService) {}
 
-  private async findProfessional(id: string) {
+  private async findProfessionalById(id: string) {
     const { data, error } = await this.db
       .getClient()
       .from('professionals')
@@ -28,11 +31,25 @@ export class ProfessionalsRepository {
     return data;
   }
 
+  public async findProfessionals(): Promise<User[]> {
+    const { data, error } = await this.db
+      .getClient()
+      .from('professionals')
+      .select('id, user:users(id, cpf, email, name, phone, role)');
+
+    if (error) throw new InternalServerErrorException(error.message);
+
+    return (data as unknown as Professional[]).map((row) => ({
+      ...row.user,
+      professionalId: row.id,
+    }));
+  }
+
   public async addSchedule(
     professionalId: string,
     dto: SetScheduleDto,
   ): Promise<WorkSchedules[]> {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const rows = dto.schedules.map((s) => ({
       professionalId,
@@ -53,7 +70,7 @@ export class ProfessionalsRepository {
   }
 
   public async getSchedule(professionalId: string): Promise<WorkSchedules[]> {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const { data, error } = await this.db
       .getClient()
@@ -71,7 +88,7 @@ export class ProfessionalsRepository {
     professionalId: string,
     dto: SetScheduleDto,
   ): Promise<WorkSchedules[]> {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const { error: deleteError } = await this.db
       .getClient()
@@ -100,7 +117,7 @@ export class ProfessionalsRepository {
   }
 
   public async getProfessionalServices(professionalId: string) {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const { data, error } = await this.db
       .getClient()
@@ -128,7 +145,7 @@ export class ProfessionalsRepository {
     professionalId: string,
     dto: LinkServiceDto,
   ): Promise<ProfessionalService> {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const { data: service, error: serviceError } = await this.db
       .getClient()
@@ -167,7 +184,7 @@ export class ProfessionalsRepository {
   }
 
   public async unlinkService(professionalId: string, serviceId: string) {
-    await this.findProfessional(professionalId);
+    await this.findProfessionalById(professionalId);
 
     const { data, error } = await this.db
       .getClient()
