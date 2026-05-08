@@ -15,12 +15,14 @@ import { UpdateMeDto } from '../auth/dto/update-me.dto';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private db: DatabaseService) {}
+  constructor(private databaseService: DatabaseService) {}
+
+  private get db() {
+    return this.databaseService.getClient().from('users');
+  }
 
   public async createUser(dto: CreateUserDto) {
     const { data: existing } = await this.db
-      .getClient()
-      .from('users')
       .select('id')
       .eq('email', dto.email)
       .maybeSingle();
@@ -30,8 +32,6 @@ export class UsersRepository {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const { data, error } = await this.db
-      .getClient()
-      .from('users')
       .insert({ ...dto, password: hashedPassword, role: UserRole.CLIENT })
       .select('id, cpf, email, name, phone, role, created_at, updated_at')
       .single();
@@ -42,10 +42,9 @@ export class UsersRepository {
   }
 
   public async findAll(): Promise<User[]> {
-    const { data, error } = await this.db
-      .getClient()
-      .from('users')
-      .select('id, cpf, email, name, phone, role');
+    const { data, error } = await this.db.select(
+      'id, cpf, email, name, phone, role',
+    );
 
     if (error) throw new InternalServerErrorException(error.message);
 
@@ -54,8 +53,6 @@ export class UsersRepository {
 
   public async findByCpf(cpf: string) {
     const { data, error } = await this.db
-      .getClient()
-      .from('users')
       .select('id, cpf, email, name, phone, role')
       .eq('cpf', cpf)
       .maybeSingle();
@@ -71,8 +68,6 @@ export class UsersRepository {
       : 'id, cpf, email, name, phone, role';
 
     const response = await this.db
-      .getClient()
-      .from('users')
       .select(fields)
       .eq('email', email)
       .maybeSingle();
@@ -84,8 +79,6 @@ export class UsersRepository {
 
   public async findById(id: string): Promise<User> {
     const { data, error } = await this.db
-      .getClient()
-      .from('users')
       .select('id, cpf, email, name, phone, role')
       .eq('id', id)
       .maybeSingle();
@@ -93,6 +86,18 @@ export class UsersRepository {
     if (error || !data) throw new NotFoundException('Usuário não encontrado');
 
     return data as User;
+  }
+
+  public async findUsersByProfessionals(): Promise<User[]> {
+    const { data, error } = await this.db
+      .select('id, cpf, email, name, phone, role')
+      .eq('role', UserRole.PROFESSIONAL);
+
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return data as User[];
   }
 
   public async updateMe(userId: string, dto: UpdateMeDto) {
@@ -107,8 +112,6 @@ export class UsersRepository {
     }
     if (dto.cpf) {
       const { data: existing } = await this.db
-        .getClient()
-        .from('users')
         .select('id')
         .eq('cpf', dto.cpf)
         .neq('id', userId)
@@ -120,8 +123,6 @@ export class UsersRepository {
     }
 
     const { data, error } = await this.db
-      .getClient()
-      .from('users')
       .update(dataToUpdate)
       .eq('id', userId)
       .select('id, cpf, email, name, phone, role, created_at, updated_at')
@@ -140,8 +141,6 @@ export class UsersRepository {
     );
 
     const { data, error } = await this.db
-      .getClient()
-      .from('users')
       .update(updatePayload)
       .eq('id', id)
       .select('id, cpf, email, name, phone, role, created_at, updated_at')
@@ -151,9 +150,12 @@ export class UsersRepository {
 
     if (dto.role && dto.role !== user.role) {
       if (dto.role === UserRole.PROFESSIONAL) {
-        await this.db.getClient().from('professionals').insert({ userId: id });
+        await this.databaseService
+          .getClient()
+          .from('professionals')
+          .insert({ userId: id });
       } else if (user.role === UserRole.PROFESSIONAL) {
-        await this.db
+        await this.databaseService
           .getClient()
           .from('professionals')
           .delete()

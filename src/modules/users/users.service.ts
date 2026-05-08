@@ -28,6 +28,10 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
+  public async findUsersByProfessionals() {
+    return this.usersRepository.findUsersByProfessionals();
+  }
+
   public async updateMe(userId: string, dto: UpdateMeDto) {
     return this.usersRepository.updateMe(userId, dto);
   }

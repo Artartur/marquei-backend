@@ -21,6 +21,11 @@ export class UsersController {
     return this.usersService.findAllUsers();
   }
 
+  @Get('/professionals')
+  public findProfessionals() {
+    return this.usersService.findUsersByProfessionals();
+  }
+
   @Get('cpf/:cpf')
   @Roles(UserRole.MANAGER)
   public findUserByCpf(@Param('cpf') cpf: string) {
