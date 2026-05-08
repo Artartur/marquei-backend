@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './modules/database/database.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -14,6 +15,7 @@ import { ProfessionalsModule } from './modules/professionals/professionals.modul
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    AppointmentsModule,
     AuthModule,
     DatabaseModule,
     ProfessionalsModule,
