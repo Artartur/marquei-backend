@@ -6,10 +6,19 @@ import { AppointmentsFilter } from 'src/interfaces/appointmentsFilter.interface'
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import {
+  AppointmentCancelledEvent,
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+} from '../notifications/events/appointment.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private appointmentsRepository: AppointmentsRepository) {}
+  constructor(
+    private appointmentsRepository: AppointmentsRepository,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   public async cancel(
     id: string,
@@ -17,11 +26,30 @@ export class AppointmentsService {
     role: UserRole,
     dto: CancelAppointmentDto,
   ) {
-    return await this.appointmentsRepository.cancel(id, userId, role, dto);
+    const appointment = await this.appointmentsRepository.cancel(
+      id,
+      userId,
+      role,
+      dto,
+    );
+
+    this.eventEmitter.emit(
+      'appointment.cancelled',
+      new AppointmentCancelledEvent(appointment),
+    );
+
+    return appointment;
   }
 
   public async create(clientId: string, dto: CreateAppointmentDto) {
-    return await this.appointmentsRepository.create(clientId, dto);
+    const appointment = await this.appointmentsRepository.create(clientId, dto);
+
+    this.eventEmitter.emit(
+      'appointment.created',
+      new AppointmentCreatedEvent(appointment),
+    );
+
+    return appointment;
   }
 
   public async findById(id: string) {
@@ -53,7 +81,18 @@ export class AppointmentsService {
     clientId: string,
     dto: RescheduleAppointmentDto,
   ) {
-    return this.appointmentsRepository.reschedule(id, clientId, dto);
+    const appointment = await this.appointmentsRepository.reschedule(
+      id,
+      clientId,
+      dto,
+    );
+
+    this.eventEmitter.emit(
+      'appointment.rescheduled',
+      new AppointmentRescheduledEvent(appointment),
+    );
+
+    return appointment;
   }
 
   public async updateStatus(id: string, userId: string, dto: UpdateStatusDto) {

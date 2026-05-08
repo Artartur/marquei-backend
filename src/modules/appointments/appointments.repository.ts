@@ -42,7 +42,7 @@ export class AppointmentsRepository {
       .select(
         `*,
             service:services ( id, name, durationMinutes, price ),
-            professional:professionals ( id, userId ),
+            professional:professionals ( id, userId, user:users ( id, name ) ),
             client:users!appointments_clientId_fkey ( id, name, email )`,
       )
       .eq('id', id)
@@ -180,7 +180,9 @@ export class AppointmentsRepository {
       throw new BadRequestException(rpcResult.error.message);
     }
 
-    return rpcResult.data as Appointments;
+    const created = rpcResult.data as { id: string };
+
+    return this.findAppointmentOrFail(created.id);
   }
 
   public async getDailyAgenda(role: UserRole, userId: string, date: string) {
@@ -330,7 +332,9 @@ export class AppointmentsRepository {
       throw new BadRequestException(response.error.message);
     }
 
-    return response.data as Appointments;
+    const rescheduled = response.data as { id: string };
+
+    return this.findAppointmentOrFail(rescheduled.id);
   }
 
   public async cancel(
@@ -372,7 +376,7 @@ export class AppointmentsRepository {
 
     if (response.error) throw new BadRequestException(response.error.message);
 
-    return response.data as Appointments;
+    return this.findAppointmentOrFail(id);
   }
 
   public async updateStatus(id: string, userId: string, dto: UpdateStatusDto) {
