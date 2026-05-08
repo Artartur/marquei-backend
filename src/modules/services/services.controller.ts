@@ -9,19 +9,18 @@ import { Roles } from '../auth/decorators/roles.decorator';
 export class ServicesController {
   constructor(private servicesService: ServicesService) {}
 
-  @Post('')
+  @Post()
   @Roles(UserRole.MANAGER)
   public async createService(@Body() dto: CreateServiceDto) {
     return this.servicesService.createService(dto);
   }
 
-  @Get('/active/:active')
-  @Roles(UserRole.MANAGER)
+  @Get('active/:active')
   public async findAllActiveServices(@Param('active') active: boolean) {
     return this.servicesService.findAllActiveServices(active);
   }
 
-  @Get('')
+  @Get()
   public async findAllServices() {
     return this.servicesService.findAllServices();
   }
