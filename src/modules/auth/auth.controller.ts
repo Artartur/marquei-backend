@@ -7,6 +7,7 @@ import {
   Request,
   Response,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request as Req, Response as Res } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -16,12 +17,14 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import type { AuthenticatedUser } from 'src/interfaces/authenticatedUser.interface';
 import { UpdateMeDto } from './dto/update-me.dto';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
   @Post('login')
+  @ApiOperation({ summary: 'Authenticate user and return access token' })
   public login(
     @Body() dto: LoginDto,
     @Response({ passthrough: true }) res: Res,
@@ -30,12 +33,15 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Invalidate refresh token cookie' })
   public logout(@Response({ passthrough: true }) res: Res) {
     return this.authService.logout(res);
   }
 
   @Public()
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token using cookie' })
   public refresh(
     @Request() req: Req,
     @Response({ passthrough: true }) res: Res,
@@ -45,16 +51,21 @@ export class AuthController {
 
   @Public()
   @Post('sign-up')
+  @ApiOperation({ summary: 'Register a new user' })
   public register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);
   }
 
   @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get authenticated user profile' })
   public me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user.id);
   }
 
   @Patch('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update authenticated user profile' })
   public updateMe(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateMeDto,
