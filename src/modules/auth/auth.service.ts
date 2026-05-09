@@ -19,10 +19,12 @@ export class AuthService {
   ) {}
 
   private setRefreshTokenCookie(res: Response, token: string) {
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
     res.cookie('refreshToken', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
       path: '/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
