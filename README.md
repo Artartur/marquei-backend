@@ -42,6 +42,7 @@ npm run start:dev
 ```
 
 The API will be available at `http://localhost:3000`.
+The Swagger UI will be available at `http://localhost:3000/docs`.
 
 ---
 
@@ -90,7 +91,6 @@ Authentication uses two tokens: a short-lived **JWT access token** (15 min) sent
 **Not implemented due to time constraints:**
 
 - Unit and integration tests (Jest is configured but has no coverage)
-- OpenAPI/Swagger documentation
 - Rate limiting on authentication routes
 - Pagination for list endpoints
 - Additional search and filtering routes
@@ -98,4 +98,5 @@ Authentication uses two tokens: a short-lived **JWT access token** (15 min) sent
 **What I would do differently:**
 
 - Move the Prisma Client output inside `src/` (`src/generated/prisma`) to prevent TypeScript from expanding `rootDir` to the project root, which causes the build to emit `dist/src/main.js` instead of `dist/main.js`
+
 - Add environment variable validation with `joi` or `zod` at startup to catch missing or malformed config early, avoiding silent failures in production
