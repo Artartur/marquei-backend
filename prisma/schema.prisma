@@ -31,6 +31,11 @@ enum ImportStatus {
   DONE_WITH_ERRORS
 }
 
+enum ImportType {
+  CLIENTS
+  APPOINTMENTS
+}
+
 enum Role {
   CLIENT
   MANAGER
@@ -64,8 +69,9 @@ model Appointment {
   cancelledBy      String?
   cancellationNote String?   @db.VarChar(255)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  reminderSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   client        User           @relation("ClientAppointments", fields: [clientId], references: [id])
   professional  Professional   @relation(fields: [professionalId], references: [id])
@@ -81,16 +87,17 @@ model Appointment {
 }
 
 model ImportJob {
-  id        String       @id @default(uuid())
-  managerId String
-  manager   User         @relation(fields: [managerId], references: [id])
-  status    ImportStatus @default(QUEUED)
-  fileName  String       @db.VarChar(255)
-  totalRows Int          @default(0)
-  processed Int          @default(0)
-  failed    Int          @default(0)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id         String       @id @default(uuid())
+  managerId  String
+  manager    User         @relation(fields: [managerId], references: [id])
+  status     ImportStatus @default(QUEUED)
+  importType ImportType   @default(CLIENTS)
+  fileName   String       @db.VarChar(255)
+  totalRows  Int          @default(0)
+  processed  Int          @default(0)
+  failed     Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   errors ImportError[]
 
