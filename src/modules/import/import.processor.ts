@@ -5,6 +5,7 @@ import { ImportStatus, ImportType } from 'generated/prisma/enums';
 import { DatabaseService } from '../database/database.service';
 import { ImportRepository } from './import.repository';
 import { parseFile } from 'src/utils/parserFile';
+import { parseExcelDate } from 'src/utils/parseExcelData';
 
 export interface ImportJobEvent {
   jobId: string;
@@ -25,7 +26,7 @@ export class ImportProcessor {
   }
 
   @OnEvent('import.process', { async: true })
-  async handle({ jobId, importType, buffer, mimetype }: ImportJobEvent) {
+  public async handle({ jobId, importType, buffer, mimetype }: ImportJobEvent) {
     await this.importRepository.updateStatus(jobId, ImportStatus.PROCESSING);
 
     let rows: Record<string, string>[];
@@ -75,32 +76,37 @@ export class ImportProcessor {
     await this.importRepository.updateStatus(jobId, status);
   }
 
-  private async processClientRow(row: Record<string, string>) {
+  private async processClientRow(row: Record<string, any>) {
     const { name, email, cpf, phone } = row;
 
     if (!name || !email || !cpf || !phone) {
       throw new Error('Missing required fields: name, email, cpf, phone');
     }
 
+    const normalizedName = String(name).trim();
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedCpf = String(cpf).trim();
+    const normalizedPhone = String(phone).trim();
+
     const { data: existing } = await this.db
       .from('users')
       .select('id')
-      .or(`email.eq.${email.trim().toLowerCase()},cpf.eq.${cpf.trim()}`)
+      .or(`email.eq.${normalizedEmail},cpf.eq.${normalizedCpf}`)
       .maybeSingle();
 
     if (existing) {
       throw new Error(
-        `User already exists with email "${email}" or CPF "${cpf}"`,
+        `User already exists with email "${normalizedEmail}" or CPF "${normalizedCpf}"`,
       );
     }
 
-    const password = await bcrypt.hash(cpf.trim(), 10);
+    const password = await bcrypt.hash(normalizedCpf, 10);
 
     const { error } = await this.db.from('users').insert({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      cpf: cpf.trim(),
-      phone: phone.trim(),
+      name: normalizedName,
+      email: normalizedEmail,
+      cpf: normalizedCpf,
+      phone: normalizedPhone,
       password,
       role: 'CLIENT',
     });
@@ -143,7 +149,7 @@ export class ImportProcessor {
 
     if (!service) throw new Error(`Service not found: ${serviceName}`);
 
-    const date = new Date(scheduledAt.trim());
+    const date = parseExcelDate(scheduledAt);
     if (isNaN(date.getTime())) throw new Error(`Invalid date: ${scheduledAt}`);
 
     const endsAt = new Date(date.getTime() + service.durationMinutes * 60_000);
