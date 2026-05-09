@@ -379,10 +379,18 @@ export class AppointmentsRepository {
     return this.findAppointmentOrFail(id);
   }
 
-  public async updateStatus(id: string, userId: string, dto: UpdateStatusDto) {
+  public async updateStatus(
+    id: string,
+    userId: string,
+    dto: UpdateStatusDto,
+    role: UserRole,
+  ) {
     const appointment = await this.findAppointmentOrFail(id);
 
-    if (appointment.professional.userId !== userId) {
+    if (
+      role !== UserRole.MANAGER &&
+      appointment.professional.userId !== userId
+    ) {
       throw new ForbiddenException('Você não pode atualizar este agendamento');
     }
 

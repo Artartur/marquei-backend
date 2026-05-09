@@ -95,7 +95,12 @@ export class AppointmentsService {
     return appointment;
   }
 
-  public async updateStatus(id: string, userId: string, dto: UpdateStatusDto) {
-    return this.appointmentsRepository.updateStatus(id, userId, dto);
+  public async updateStatus(
+    id: string,
+    userId: string,
+    dto: UpdateStatusDto,
+    role: UserRole,
+  ) {
+    return this.appointmentsRepository.updateStatus(id, userId, dto, role);
   }
 }

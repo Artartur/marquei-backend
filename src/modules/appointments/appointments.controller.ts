@@ -145,6 +145,11 @@ export class AppointmentsController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateStatusDto,
   ) {
-    return this.appointmentsService.updateStatus(id, user.id, dto);
+    return this.appointmentsService.updateStatus(
+      id,
+      user.id,
+      dto,
+      user.role as UserRole,
+    );
   }
 }
