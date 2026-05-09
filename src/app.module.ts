@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './modules/database/database.module';
+import { ImportModule } from './modules/import/import.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './modules/users/users.module';
     AppointmentsModule,
     AuthModule,
     DatabaseModule,
+    ImportModule,
     NotificationsModule,
     ProfessionalsModule,
     ServicesModule,
