@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './modules/database/database.module';
 import { ImportModule } from './modules/import/import.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './modules/users/users.module';
     ScheduleModule.forRoot(),
     AppointmentsModule,
     AuthModule,
+    DashboardModule,
     DatabaseModule,
     ImportModule,
     NotificationsModule,
