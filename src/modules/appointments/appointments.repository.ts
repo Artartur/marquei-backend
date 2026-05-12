@@ -9,6 +9,7 @@ import { Appointments } from 'src/interfaces/appointments.interface';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { UserRole } from 'src/utils/enums/UserRole';
+import { DayOfWeek } from 'src/utils/enums/DayOfWeek';
 import { AppointmentStatus } from 'generated/prisma/enums';
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -74,15 +75,16 @@ export class AppointmentsRepository {
       throw new NotFoundException('Serviço não encontrado ou inativo');
     }
 
-    const days = [
-      'DOMINGO',
-      'SEGUNDA',
-      'TERCA',
-      'QUARTA',
-      'QUINTA',
-      'SEXTA',
-      'SABADO',
+    const days: DayOfWeek[] = [
+      DayOfWeek.DOMINGO,
+      DayOfWeek.SEGUNDA,
+      DayOfWeek.TERCA,
+      DayOfWeek.QUARTA,
+      DayOfWeek.QUINTA,
+      DayOfWeek.SEXTA,
+      DayOfWeek.SABADO,
     ];
+
     const dayOfWeek = days[new Date(date + 'T12:00:00').getDay()];
 
     const { data: schedule, error: scheduleError } = await this.db
